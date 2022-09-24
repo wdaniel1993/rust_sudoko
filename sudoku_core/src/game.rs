@@ -59,7 +59,7 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
-    use crate::game::*;
+    use super::*;
     
     #[test]
     fn game_creation_works() {

@@ -30,8 +30,8 @@ impl From<Digit> for u8 {
 
 #[cfg(test)]
 mod tests {
-    use crate::digit::*;
-    
+    use super::*;
+
     #[test]
     fn digit_creation_works() {
         let invalid_digit = Digit::new(11);
