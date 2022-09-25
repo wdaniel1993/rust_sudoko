@@ -10,7 +10,7 @@ pub enum FieldGroupType {
 }
 
 pub struct FieldGroup {
-    fields: Vec<Field>,
+    fields: Vec<Box<Field>>,
     group_type: FieldGroupType
 }
 
@@ -27,14 +27,14 @@ pub struct DigitPosition {
 }
 
 pub struct Game {
-    grid: [[Field; 9]; 9],
+    grid: [[Box<Field>; 9]; 9],
     groups: Vec<FieldGroup>
 }
 
 impl From<[[Option<Digit>; 9]; 9]> for Game {
     fn from(definition: [[Option<Digit>; 9]; 9]) -> Self {
         let fields = definition.map(|row| 
-            row.map(|field| Field { content: field})
+            row.map(|field| Box::new(Field { content: field}))
         );
         let rows: Vec<FieldGroup> =(0..9).map(|x| 
             FieldGroup { 
