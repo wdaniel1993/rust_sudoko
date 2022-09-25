@@ -1,12 +1,12 @@
-use std::{sync::Arc};
+use std::{sync::Arc, fmt::Pointer};
 
 use crate::digit::Digit;
 
 #[derive(Debug, PartialEq)]
 pub enum FieldGroupType {
-    Row(Digit),
-    Column(Digit),
-    Shape(Digit)
+    Row(u8),
+    Column(u8),
+    Shape(u8)
 }
 
 pub struct FieldGroup {
@@ -18,24 +18,31 @@ pub struct Field {
     status: Option<Digit>
 }
 
+#[derive(Clone, Copy)]
+pub struct DigitPosition {
+    status: Digit,
+    pos_x: u8,
+    pos_y: u8
+}
+
 pub struct Game {
     grid: [[Arc<Field>; 9]; 9],
     groups: Vec<FieldGroup>
 }
 
-impl Game {
-    pub fn new(definition: [[Option<Digit>; 9]; 9]) -> Game {
+impl From<[[Option<Digit>; 9]; 9]> for Game {
+    fn from(definition: [[Option<Digit>; 9]; 9]) -> Self {
         let fields = definition.map(|row| 
             row.map(|field| Arc::new(Field { status: field}))
         );
         let rows: Vec<FieldGroup> =(0..9).map(|x| 
             FieldGroup { 
-                group_type: FieldGroupType::Row(Digit::try_from(x+1).unwrap()),
+                group_type: FieldGroupType::Row(x),
                 fields: fields[usize::from(x)].to_vec()
             }).collect();
         let columns: Vec<FieldGroup> =(0..9).map(|x| 
             FieldGroup { 
-                group_type: FieldGroupType::Column(Digit::try_from(x+1).unwrap()),
+                group_type: FieldGroupType::Column(x),
                 fields: fields[..][usize::from(x)].to_vec()
             }).collect();
         let shapes: Vec<FieldGroup> =(0..9).map(|x| {
@@ -46,7 +53,7 @@ impl Game {
             let rows =  fields[row_lower_bound..row_upper_bound].to_vec();
             let fields = rows.into_iter().flat_map(|row| row[column_lower_bound..column_upper_bound].to_vec()).collect();
             FieldGroup { 
-                group_type: FieldGroupType::Shape(Digit::try_from(x+1).unwrap()),
+                group_type: FieldGroupType::Shape(x),
                 fields: fields
             }
         }).collect();
@@ -57,13 +64,29 @@ impl Game {
     }
 }
 
+impl TryFrom<Vec<DigitPosition>> for Game {
+    type Error = &'static str;
+
+    fn try_from(positions: Vec<DigitPosition>) -> Result<Self, Self::Error> {
+        if !positions.clone().into_iter().all(|f| f.pos_x < 9 && f.pos_y < 9) {
+            Err("Positions not valid - must be below 9")
+        } else {
+            let mut arr: [[Option<Digit>; 9]; 9] = Default::default();
+            for pos in positions.into_iter() {
+                arr[usize::from(pos.pos_x)][usize::from(pos.pos_y)] = Some(pos.status)
+            }
+            Ok(Game::from(arr))
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     
     #[test]
-    fn game_creation_works() {
-        let game = Game::new([
+    fn game_creation_with_array_works() {
+        let game = Game::from([
             [Digit::new(1), Digit::new(2), Digit::new(3), None, None, None, None, None, None],
             [Digit::new(1), Digit::new(2), Digit::new(3), None, None, None, None, None, None],
             [Digit::new(1), Digit::new(2), Digit::new(3), None, None, None, None, None, None],
@@ -74,7 +97,20 @@ mod tests {
             [Digit::new(1), Digit::new(2), Digit::new(3), None, None, None, None, None, None],
             [Digit::new(1), Digit::new(2), Digit::new(3), None, None, None, None, None, None]
         ]);
-        assert_eq!(game.groups.get(0).unwrap().group_type,FieldGroupType::Row(Digit::new(1).unwrap()));
-        assert_eq!(game.groups.get(18).unwrap().group_type,FieldGroupType::Shape(Digit::new(1).unwrap()));
+        assert_eq!(game.groups.get(0).unwrap().group_type,FieldGroupType::Row(0));
+        assert_eq!(game.groups.get(18).unwrap().group_type,FieldGroupType::Shape(0));
+    }
+
+    #[test]
+    fn game_creation_with_positions() {
+        let game = Game::try_from(vec![
+            DigitPosition {
+                status: Digit::new(1).unwrap(),
+                pos_x: 0,
+                pos_y: 0
+            }
+        ]);
+        assert_eq!(game.as_ref().unwrap().groups.get(0).unwrap().group_type,FieldGroupType::Row(0));
+        assert_eq!(game.as_ref().unwrap().groups.get(18).unwrap().group_type,FieldGroupType::Shape(0));
     }
 }
