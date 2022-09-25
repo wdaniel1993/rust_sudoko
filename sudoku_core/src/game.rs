@@ -1,4 +1,4 @@
-use std::{sync::Arc, fmt::Pointer};
+use std::{sync::Arc};
 
 use crate::digit::Digit;
 
@@ -10,30 +10,31 @@ pub enum FieldGroupType {
 }
 
 pub struct FieldGroup {
-    fields: Vec<Arc<Field>>,
+    fields: Vec<Field>,
     group_type: FieldGroupType
 }
 
+#[derive(Clone, Copy)]
 pub struct Field {
-    status: Option<Digit>
+    content: Option<Digit>
 }
 
 #[derive(Clone, Copy)]
 pub struct DigitPosition {
-    status: Digit,
+    content: Digit,
     pos_x: u8,
     pos_y: u8
 }
 
 pub struct Game {
-    grid: [[Arc<Field>; 9]; 9],
+    grid: [[Field; 9]; 9],
     groups: Vec<FieldGroup>
 }
 
 impl From<[[Option<Digit>; 9]; 9]> for Game {
     fn from(definition: [[Option<Digit>; 9]; 9]) -> Self {
         let fields = definition.map(|row| 
-            row.map(|field| Arc::new(Field { status: field}))
+            row.map(|field| Field { content: field})
         );
         let rows: Vec<FieldGroup> =(0..9).map(|x| 
             FieldGroup { 
@@ -73,7 +74,7 @@ impl TryFrom<Vec<DigitPosition>> for Game {
         } else {
             let mut arr: [[Option<Digit>; 9]; 9] = Default::default();
             for pos in positions.into_iter() {
-                arr[usize::from(pos.pos_x)][usize::from(pos.pos_y)] = Some(pos.status)
+                arr[usize::from(pos.pos_x)][usize::from(pos.pos_y)] = Some(pos.content)
             }
             Ok(Game::from(arr))
         }
@@ -105,7 +106,7 @@ mod tests {
     fn game_creation_with_positions() {
         let game = Game::try_from(vec![
             DigitPosition {
-                status: Digit::new(1).unwrap(),
+                content: Digit::new(1).unwrap(),
                 pos_x: 0,
                 pos_y: 0
             }
