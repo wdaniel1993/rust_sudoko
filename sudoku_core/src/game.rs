@@ -36,17 +36,17 @@ impl From<[[Option<Digit>; 9]; 9]> for Game {
         let fields = definition.map(|row| 
             row.map(|field| Arc::new(RwLock::new(Field { content: field})))
         );
-        let rows: Vec<FieldGroup> =(0..9).map(|x| 
+        let rows =(0..9).map(|x| 
             FieldGroup { 
                 group_type: FieldGroupType::Row(x),
                 fields: fields[usize::from(x)].to_vec()
-            }).collect();
-        let columns: Vec<FieldGroup> =(0..9).map(|x| 
+            });
+        let columns =(0..9).map(|x| 
             FieldGroup { 
                 group_type: FieldGroupType::Column(x),
                 fields: fields[..][usize::from(x)].to_vec()
-            }).collect();
-        let shapes: Vec<FieldGroup> =(0..9).map(|x| {
+            });
+        let shapes =(0..9).map(|x| {
             let row_lower_bound = usize::from((x / 3) * 3);
             let row_upper_bound = row_lower_bound + 3;
             let column_lower_bound = usize::from((x % 3) *3);
@@ -57,10 +57,10 @@ impl From<[[Option<Digit>; 9]; 9]> for Game {
                 group_type: FieldGroupType::Shape(x),
                 fields: fields
             }
-        }).collect();
+        });
         Game {
-            grid: fields,
-            groups: rows.into_iter().chain(columns.into_iter().chain(shapes.into_iter())).collect()
+            groups: rows.chain(columns.chain(shapes)).collect(),
+            grid: fields
         }
     }
 }
@@ -110,8 +110,8 @@ mod tests {
                 pos_x: 0,
                 pos_y: 0
             }
-        ]);
-        assert_eq!(game.as_ref().unwrap().groups.get(0).unwrap().group_type,FieldGroupType::Row(0));
-        assert_eq!(game.as_ref().unwrap().groups.get(18).unwrap().group_type,FieldGroupType::Shape(0));
+        ]).unwrap();
+        assert_eq!(game.groups.get(0).unwrap().group_type,FieldGroupType::Row(0));
+        assert_eq!(game.groups.get(18).unwrap().group_type,FieldGroupType::Shape(0));
     }
 }
