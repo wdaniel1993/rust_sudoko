@@ -1,4 +1,4 @@
-use std::{sync::Arc};
+use std::sync::{RwLock, Arc};
 
 use crate::digit::Digit;
 
@@ -10,7 +10,7 @@ pub enum FieldGroupType {
 }
 
 pub struct FieldGroup {
-    fields: Vec<Box<Field>>,
+    fields: Vec<Arc<RwLock<Field>>>,
     group_type: FieldGroupType
 }
 
@@ -27,14 +27,14 @@ pub struct DigitPosition {
 }
 
 pub struct Game {
-    grid: [[Box<Field>; 9]; 9],
+    grid: [[Arc<RwLock<Field>>; 9]; 9],
     groups: Vec<FieldGroup>
 }
 
 impl From<[[Option<Digit>; 9]; 9]> for Game {
     fn from(definition: [[Option<Digit>; 9]; 9]) -> Self {
         let fields = definition.map(|row| 
-            row.map(|field| Box::new(Field { content: field}))
+            row.map(|field| Arc::new(RwLock::new(Field { content: field})))
         );
         let rows: Vec<FieldGroup> =(0..9).map(|x| 
             FieldGroup { 
