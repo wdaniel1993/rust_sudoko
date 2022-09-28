@@ -1,5 +1,5 @@
 #[derive(Debug, PartialEq, Clone, Copy)]
-pub struct Digit (u8);
+pub struct Digit(u8);
 
 impl Digit {
     pub fn new(digit: u8) -> Option<Digit> {
